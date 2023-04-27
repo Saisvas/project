@@ -1,5 +1,5 @@
-// var express = require('express');
-import express from 'express';
+var express = require('express');
+// import express from 'express';
 var app = express();
 app.use(express.static('src'));
 app.use(express.static('../FilmToken-contract/build/contracts'));

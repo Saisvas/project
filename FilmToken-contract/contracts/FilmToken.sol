@@ -186,6 +186,11 @@ contract FilmToken is ERC721 {
         return result;
     }
 
-
+    function doSomething(uint x) public {
+        if (x == 0) {
+            revert("x cannot be zero");
+        }
+        // function code goes here
+    }
 
 }
