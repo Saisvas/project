@@ -86,7 +86,7 @@ contract FilmToken is ERC721 {
         admin = msg.sender;
     }
 
-    function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(msg.sender) onlyAdmin{
+    function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(msg.sender){
         productionAddrToNameMap[addr] = name;
     }
     // uint appr, uint depr,uint minTime,uint maxTime, uint baseValue)

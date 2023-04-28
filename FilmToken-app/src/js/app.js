@@ -41,7 +41,7 @@ App = {
     },
 
     bindEvents: function() {
-        $(document).on('click', '#register', function(){ var ad = $('#enter_address').val(); App.doSomething(ad); });
+        $(document).on('click', '#register', function(){ var ad = $('#name').val(); var ad1 = $('#address').val(); App.registerProductionHouse(ad, ad1); });
     },
 
     populateAddress : function(){
@@ -57,15 +57,15 @@ App = {
     },
 
 
-    doSomething : function(x) {
+    registerProductionHouse : function(x, y) {
         console.log("To check");
         var voteInstance;
         App.contracts.vote.deployed().then(function(instance) {
             voteInstance = instance;
-            return voteInstance.doSomething(x);
+            return voteInstance.registerProductionHouse(x, y);
         }).then(function(res){
             console.log(res);
-            alert(App.names[res] + "  is the winner ! :)");
+            alert("registered");
         }).catch(function(err){
             console.log(err.message);
         })
