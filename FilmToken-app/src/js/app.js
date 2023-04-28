@@ -3,7 +3,7 @@ App = {
     contracts: {},
     names: new Array(),
     url: 'http://127.0.0.1:7545',
-    chairPerson:null,
+    //chairPerson:null,
     currentAccount:null,
     init: function() {
         return App.initWeb3();
@@ -42,6 +42,25 @@ App = {
 
     bindEvents: function() {
         $(document).on('click', '#register', function(){ var ad = $('#name').val(); var ad1 = $('#address').val(); App.registerProductionHouse(ad, ad1); });
+        $(document).on('click', '#tokenize', function(){ 
+            var ad = $('#movieName').val(); 
+            var ad1 = $('#movieTokenValue').val();
+            var ad2 = $('#appreciationPercent').val()
+            var ad3 = $('#depriciationPercent').val()
+            var ad4 = $('#earliestReleaseDate').val()
+            var ad5 = $('#finalReleaseDate').val()
+
+            const struct = {
+                movieName : ad,
+                basePrice : ad1,
+                apprPercent : ad2,
+                deprPercent : ad3,
+                minTime : ad4,
+                maxTime : ad5
+            }
+            App.createMovieToken(ad, struct); 
+        });
+
     },
 
     populateAddress : function(){
@@ -70,7 +89,24 @@ App = {
             console.log(err.message);
         })
     }
+
+
+
+    createMovieToken : function(ad, struct) {
+        console.log("To check");
+        var voteInstance;
+        App.contracts.vote.deployed().then(function(instance) {
+            voteInstance = instance;
+            return voteInstance.createMovieToken(ad, struct);
+        }).then(function(res){
+            console.log(res);
+            alert("tokenized");
+        }).catch(function(err){
+            console.log(err.message);
+        })
+    }
 };
+
 
 $(function() {
     $(window).load(function() {
