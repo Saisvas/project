@@ -52,12 +52,17 @@ App = {
 
             const struct = {
                 movieName : ad,
+                tokenId : "",
                 basePrice : ad1,
+                productionCompany : "",
+                ownerAddr : "",
+                minTime : ad4,
+                maxTime : ad5,
                 apprPercent : ad2,
                 deprPercent : ad3,
-                minTime : ad4,
-                maxTime : ad5
+                resale : ""
             }
+            console.log(struct)
             App.createMovieToken(ad, struct); 
         });
 
@@ -88,7 +93,7 @@ App = {
         }).catch(function(err){
             console.log(err.message);
         })
-    }
+    },
 
 
 
