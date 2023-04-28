@@ -3,7 +3,7 @@ App = {
     contracts: {},
     names: new Array(),
     url: 'http://127.0.0.1:7545',
-    chairPerson:null,
+    //chairPerson:null,
     currentAccount:null,
     init: function() {
         return App.initWeb3();
@@ -57,8 +57,23 @@ App = {
     },
 
 
-    //test function to check working,
-    doSomething : function(x) {
+    registerProductionHouse : function(x, y) {
+        console.log("To check");
+        var voteInstance;
+        App.contracts.vote.deployed().then(function(instance) {
+            voteInstance = instance;
+            return voteInstance.registerProductionHouse(x, y);
+        }).then(function(res){
+            console.log(res);
+            alert("registered");
+        }).catch(function(err){
+            console.log(err.message);
+        })
+    },
+
+
+
+    createMovieToken : function(ad, struct) {
         console.log("To check");
         var voteInstance;
         App.contracts.vote.deployed().then(function(instance) {
