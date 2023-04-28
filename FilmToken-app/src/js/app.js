@@ -57,6 +57,7 @@ App = {
     },
 
 
+    //test function to check working,
     doSomething : function(x) {
         console.log("To check");
         var voteInstance;
