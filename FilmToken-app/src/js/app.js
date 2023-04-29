@@ -41,7 +41,8 @@ App = {
     },
 
     bindEvents: function() {
-        $(document).on('click', '#register', function(){ var ad = $('#name').val(); var ad1 = $('#address').val(); App.registerProductionHouse(ad, ad1); });
+        // $(document).on('click', '#register', function(){ var ad = $('#name').val(); var ad1 = $('#address').val(); App.registerProductionHouse(ad, ad1); });
+        $(document).on('click', '#registerProd', function(){ var prodName = $('#prodName').val(); var prodAddr = $('#prodAddr').val(); App.registerProductionHouse(prodName, prodAddr); });
         $(document).on('click', '#tokenize', function(){ 
             var ad = $('#movieName').val(); 
             var ad1 = $('#movieTokenValue').val();
@@ -83,12 +84,13 @@ App = {
     },
 
 
-    registerProductionHouse : function(x, y) {
-        console.log("To check");
-        var voteInstance;
+    registerProductionHouse : function(prodName, prodAddr) {
+        console.log("Reg Prod House");
+        console.log(web3.eth.accounts[0]);
+        var filmInstance;
         App.contracts.vote.deployed().then(function(instance) {
-            voteInstance = instance;
-            return voteInstance.registerProductionHouse(x, y);
+            filmInstance = instance;
+            return filmInstance.registerProductionHouse(prodName.toString(), prodAddr.toString(), {from : web3.eth.accounts[0]});
         }).then(function(res){
             console.log(res);
             alert("registered");
@@ -112,6 +114,8 @@ App = {
         }
         App.contracts.vote.deployed().then(function(instance) {
             voteInstance = instance;
+            console.log(struct.basePrice);
+            console.log(struct.apprPercent);
             return voteInstance.createMovieToken(ad, parseInt(struct.basePrice),parseInt(struct.baseDays), parseInt(struct.minTime),parseInt(struct.maxTime), parseInt(struct.apprPercent), parseInt(struct.deprPercent));
         }).then(function(res){
             console.log(res);
