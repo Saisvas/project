@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "../node_modules/@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "../node_modules/@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract FilmToken is ERC721 {
+contract MovieToken is ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter public tokenIds;
 
@@ -86,18 +86,36 @@ contract FilmToken is ERC721 {
         admin = msg.sender;
     }
 
-    function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(msg.sender){
+    function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(msg.sender) onlyAdmin{
         productionAddrToNameMap[addr] = name;
     }
     // uint appr, uint depr,uint minTime,uint maxTime, uint baseValue)
 
-    function createMovieToken(string memory movieName, Token memory input) public validProdHouse(msg.sender) duplicateMovieToken(movieName) validMinMaxValues(input.minTime,input.maxTime) validMinMaxValues(input.apprPercent,input.deprPercent){
+    // function createMovieToken(string memory movieName, Token memory input) public validProdHouse(msg.sender) duplicateMovieToken(movieName) validMinMaxValues(input.minTime,input.maxTime) validMinMaxValues(input.apprPercent,input.deprPercent){
+    //     //check if the user is a registerd prod house or not, handled in validProdHouse modifier
+    //     //check for duplicate token
+    //     // string memory prodName = productionAddrToNameMap[msg.sender];
+    //     //check if input values are valid
+    //     // address payable sender = payable(msg.sender);
+    //     Token memory newToken = Token(movieName,tokenIds.current(),input.basePrice,productionAddrToNameMap[msg.sender],payable(msg.sender),input.minTime,input.maxTime,input.apprPercent,input.deprPercent,true);
+
+    //     nameTokenIdMap[movieName] = tokenIds.current();
+    //     tokenIdToTokenMap[tokenIds.current()] = newToken;
+    //     tokenIdToOwnerMap[tokenIds.current()] = msg.sender;
+    //     _safeMint(msg.sender, tokenIds.current());
+    //     tokenIds.increment();
+    //     allTokens.push(newToken);
+
+
+    // }
+
+    function createMovieToken(string memory movieName, uint basePrice,uint minTime,uint maxTime,uint apprPercent,uint deprPercent) public validProdHouse(msg.sender) duplicateMovieToken(movieName){
         //check if the user is a registerd prod house or not, handled in validProdHouse modifier
         //check for duplicate token
         // string memory prodName = productionAddrToNameMap[msg.sender];
         //check if input values are valid
         // address payable sender = payable(msg.sender);
-        Token memory newToken = Token(movieName,tokenIds.current(),input.basePrice,productionAddrToNameMap[msg.sender],payable(msg.sender),input.minTime,input.maxTime,input.apprPercent,input.deprPercent,true);
+        Token memory newToken = Token(movieName,tokenIds.current(),basePrice,productionAddrToNameMap[msg.sender],payable(msg.sender),minTime,maxTime,apprPercent,deprPercent,true);
 
         nameTokenIdMap[movieName] = tokenIds.current();
         tokenIdToTokenMap[tokenIds.current()] = newToken;
@@ -184,13 +202,6 @@ contract FilmToken is ERC721 {
             }
         }
         return result;
-    }
-
-    function doSomething(uint x) public {
-        if (x == 0) {
-            revert("x cannot be zero");
-        }
-        // function code goes here
     }
 
 }
