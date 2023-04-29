@@ -18,6 +18,7 @@ contract MovieToken is ERC721 {
         uint maxTime;
         uint apprPercent;
         uint deprPercent;
+        uint baseDays;
 
         bool resale;
     }
@@ -109,13 +110,13 @@ contract MovieToken is ERC721 {
 
     // }
 
-    function createMovieToken(string memory movieName, uint basePrice,uint minTime,uint maxTime,uint apprPercent,uint deprPercent) public validProdHouse(msg.sender) duplicateMovieToken(movieName){
+    function createMovieToken(string memory movieName, uint basePrice,uint baseDays, uint minTime,uint maxTime,uint apprPercent,uint deprPercent) public validProdHouse(msg.sender) duplicateMovieToken(movieName){
         //check if the user is a registerd prod house or not, handled in validProdHouse modifier
         //check for duplicate token
         // string memory prodName = productionAddrToNameMap[msg.sender];
         //check if input values are valid
         // address payable sender = payable(msg.sender);
-        Token memory newToken = Token(movieName,tokenIds.current(),basePrice,productionAddrToNameMap[msg.sender],payable(msg.sender),minTime,maxTime,apprPercent,deprPercent,true);
+        Token memory newToken = Token(movieName,tokenIds.current(),basePrice,productionAddrToNameMap[msg.sender],payable(msg.sender),minTime,maxTime,apprPercent,deprPercent,baseDays,true);
 
         nameTokenIdMap[movieName] = tokenIds.current();
         tokenIdToTokenMap[tokenIds.current()] = newToken;
@@ -136,24 +137,24 @@ contract MovieToken is ERC721 {
         uint value = token.basePrice;
         uint minDays = token.minTime;
         uint maxDays = token.maxTime;
+        uint baseDays = token.baseDays;
 
-        uint finalValue = value;
+        uint finalValue = value;// case where dayss == baseDays
 
-        if(dayss<0){
-            if(dayss>minDays){//highest cost
-                finalValue += finalValue * (token.apprPercent/100);
-                finalValue += finalValue * (token.apprPercent/100);
-            }else{//second highest
-                finalValue += finalValue * (token.apprPercent/100);
-            }
-        }else if(dayss>0){
-            if(dayss>maxDays){//least cost
-                finalValue -= finalValue * (token.apprPercent/100);
-                finalValue -= finalValue * (token.apprPercent/100);
-            }else{//second least
-                finalValue -= finalValue * (token.apprPercent/100);
-            }
+
+        if(dayss > minDays && dayss < (minDays+ baseDays) / 2 ){ //highest cost
+            finalValue += finalValue * (token.apprPercent/100);
+            finalValue += finalValue * (token.apprPercent/100);
+        }else if(dayss>=(baseDays+dayss)/2 && dayss<baseDays ){//2nd highest
+            finalValue += finalValue * (token.apprPercent/100);
+        }else if(dayss>baseDays && dayss<=(baseDays+maxDays)/2){//second least
+            finalValue -= finalValue * (token.apprPercent/100);
+        }else if(dayss>(baseDays+maxDays)/2){//least most
+            finalValue -= finalValue * (token.apprPercent/100);
+            finalValue -= finalValue * (token.apprPercent/100);
         }
+
+
 
         //get token owner and transfer ether
         token.ownerAddr.transfer(msg.value); // failure of this reverts everything needn't explicitly handle for now, TODO: better, give a proper error message

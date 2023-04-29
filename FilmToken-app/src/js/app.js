@@ -45,6 +45,7 @@ App = {
         $(document).on('click', '#tokenize', function(){ 
             var ad = $('#movieName').val(); 
             var ad1 = $('#movieTokenValue').val();
+            var baseDays = $('#baseDays').val();
             var ad2 = $('#appreciationPercent').val()
             var ad3 = $('#depriciationPercent').val()
             var ad4 = $('#earliestReleaseDate').val()
@@ -54,6 +55,7 @@ App = {
                 movieName : ad,
                 tokenId : 1,//
                 basePrice : parseInt(ad1),
+                baseDays : parseInt(baseDays),
                 productionCompany : "dvvent",
                 ownerAddr : "0xaF0f99add34234830D377141e2FA29Fd13aaAdAC" ,
                 minTime : parseInt(ad4),
@@ -100,9 +102,17 @@ App = {
     createMovieToken : function(ad, struct) {
         console.log("To check");
         var voteInstance;
+        if(struct.minTime>struct.maxTime || struct.minTime<0 || struct.maxTime<0){
+            alert("Invalid values");
+            return;
+        }
+        if(struct.apprPercent>struct.maxTime || struct.minTime<0 || struct.maxTime<0){
+            alert("Invalid values");
+            return;
+        }
         App.contracts.vote.deployed().then(function(instance) {
             voteInstance = instance;
-            return voteInstance.createMovieToken(ad, struct);
+            return voteInstance.createMovieToken(ad, parseInt(struct.basePrice),parseInt(struct.baseDays), parseInt(struct.minTime),parseInt(struct.maxTime), parseInt(struct.apprPercent), parseInt(struct.deprPercent));
         }).then(function(res){
             console.log(res);
             alert("tokenized");
