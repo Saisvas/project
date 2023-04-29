@@ -41,7 +41,7 @@ App = {
     },
 
     bindEvents: function() {
-        // $(document).on('click', '#register', function(){ var ad = $('#name').val(); var ad1 = $('#address').val(); App.registerProductionHouse(ad, ad1); });
+        $(document).on('click', '#fetchAll', function(){ App.getAllProdHouses(); });
         $(document).on('click', '#registerProd', function(){ var prodName = $('#prodName').val(); var prodAddr = $('#prodAddr').val(); App.registerProductionHouse(prodName, prodAddr); });
         $(document).on('click', '#tokenize', function(){ 
             var ad = $('#movieName').val(); 
@@ -87,10 +87,11 @@ App = {
     registerProductionHouse : function(prodName, prodAddr) {
         console.log("Reg Prod House");
         console.log(web3.eth.accounts[0]);
+        console.log(prodAddr);
         var filmInstance;
         App.contracts.vote.deployed().then(function(instance) {
             filmInstance = instance;
-            return filmInstance.registerProductionHouse(prodName.toString(), prodAddr.toString(), {from : web3.eth.accounts[0]});
+            return filmInstance.registerProductionHouse(prodName, prodAddr, {from : web3.eth.accounts[0]});
         }).then(function(res){
             console.log(res);
             alert("registered");
@@ -120,6 +121,19 @@ App = {
         }).then(function(res){
             console.log(res);
             alert("tokenized");
+        }).catch(function(err){
+            console.log(err.message);
+        })
+    },
+
+    getAllProdHouses : function (){
+        App.contracts.vote.deployed().then(function(instance) {
+            voteInstance = instance;
+            console.log("Entered Fetch");
+            return voteInstance.getAllProdHouses();
+        }).then(function(res){
+            console.log(res);
+            alert("fetch successful");
         }).catch(function(err){
             console.log(err.message);
         })

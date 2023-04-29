@@ -88,12 +88,12 @@ contract MovieToken is ERC721 {
         admin = msg.sender;
     }
 
-    function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(msg.sender) onlyAdmin{
+    function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(addr) onlyAdmin{
         productionAddrToNameMap[addr] = name;
         allProdHouses.push(addr);
     }
 
-    function allProdHouses() public view returns (uint[] memory) {
+    function getAllProdHouses() public view returns (address[] memory) {
         return allProdHouses;
     }
     // uint appr, uint depr,uint minTime,uint maxTime, uint baseValue)
