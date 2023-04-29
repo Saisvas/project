@@ -3,7 +3,7 @@ App = {
     contracts: {},
     names: new Array(),
     url: 'http://127.0.0.1:7545',
-    chairPerson:null,
+    //chairPerson:null,
     currentAccount:null,
     init: function() {
         return App.initWeb3();
@@ -41,7 +41,34 @@ App = {
     },
 
     bindEvents: function() {
-        $(document).on('click', '#register', function(){ var ad = $('#enter_address').val(); App.doSomething(ad); });
+        $(document).on('click', '#fetchAll', function(){ App.getAllProdHouses(); });
+        $(document).on('click', '#registerProd', function(){ var prodName = $('#prodName').val(); var prodAddr = $('#prodAddr').val(); App.registerProductionHouse(prodName, prodAddr); });
+        $(document).on('click', '#tokenize', function(){ 
+            var ad = $('#movieName').val(); 
+            var ad1 = $('#movieTokenValue').val();
+            var baseDays = $('#baseDays').val();
+            var ad2 = $('#appreciationPercent').val()
+            var ad3 = $('#depriciationPercent').val()
+            var ad4 = $('#earliestReleaseDate').val()
+            var ad5 = $('#finalReleaseDate').val()
+                // [ "RRR",   0,  0.1,  "dvv", "0xaF0f99add34234830D377141e2FA29Fd13aaAdAC",  2,  7, 3, 5,  true ]
+            const struct = {
+                movieName : ad,
+                tokenId : 1,//
+                basePrice : parseInt(ad1),
+                baseDays : parseInt(baseDays),
+                productionCompany : "dvvent",
+                ownerAddr : "0xaF0f99add34234830D377141e2FA29Fd13aaAdAC" ,
+                minTime : parseInt(ad4),
+                maxTime : parseInt(ad5),
+                apprPercent : parseInt(ad2),
+                deprPercent : parseInt(ad3),
+                resale : true
+            }
+            console.log(struct)
+            App.createMovieToken(ad, struct); 
+        });
+
     },
 
     populateAddress : function(){
@@ -57,20 +84,62 @@ App = {
     },
 
 
-    doSomething : function(x) {
-        console.log("To check");
-        var voteInstance;
+    registerProductionHouse : function(prodName, prodAddr) {
+        console.log("Reg Prod House");
+        console.log(web3.eth.accounts[0]);
+        console.log(prodAddr);
+        var filmInstance;
         App.contracts.vote.deployed().then(function(instance) {
-            voteInstance = instance;
-            return voteInstance.doSomething(x);
+            filmInstance = instance;
+            return filmInstance.registerProductionHouse(prodName, prodAddr, {from : web3.eth.accounts[0]});
         }).then(function(res){
             console.log(res);
-            alert(App.names[res] + "  is the winner ! :)");
+            alert("registered");
+        }).catch(function(err){
+            console.log(err.message);
+        })
+    },
+
+
+
+    createMovieToken : function(ad, struct) {
+        console.log("To check");
+        var voteInstance;
+        if(struct.minTime>struct.maxTime || struct.minTime<0 || struct.maxTime<0){
+            alert("Invalid values");
+            return;
+        }
+        if(struct.apprPercent>struct.maxTime || struct.minTime<0 || struct.maxTime<0){
+            alert("Invalid values");
+            return;
+        }
+        App.contracts.vote.deployed().then(function(instance) {
+            voteInstance = instance;
+            console.log(struct.basePrice);
+            console.log(struct.apprPercent);
+            return voteInstance.createMovieToken(ad, parseInt(struct.basePrice),parseInt(struct.baseDays), parseInt(struct.minTime),parseInt(struct.maxTime), parseInt(struct.apprPercent), parseInt(struct.deprPercent));
+        }).then(function(res){
+            console.log(res);
+            alert("tokenized");
+        }).catch(function(err){
+            console.log(err.message);
+        })
+    },
+
+    getAllProdHouses : function (){
+        App.contracts.vote.deployed().then(function(instance) {
+            voteInstance = instance;
+            console.log("Entered Fetch");
+            return voteInstance.getAllProdHouses();
+        }).then(function(res){
+            console.log(res);
+            alert("fetch successful");
         }).catch(function(err){
             console.log(err.message);
         })
     }
 };
+
 
 $(function() {
     $(window).load(function() {

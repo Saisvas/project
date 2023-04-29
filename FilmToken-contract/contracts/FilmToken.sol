@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "../node_modules/@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "../node_modules/@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract FilmToken is ERC721 {
+contract MovieToken is ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter public tokenIds;
 
@@ -18,6 +18,7 @@ contract FilmToken is ERC721 {
         uint maxTime;
         uint apprPercent;
         uint deprPercent;
+        uint baseDays;
 
         bool resale;
     }
@@ -26,6 +27,7 @@ contract FilmToken is ERC721 {
     address public admin;
     mapping(uint256 => Token) public tokenIdToTokenMap;
     mapping(address=>string) productionAddrToNameMap;
+    address [] allProdHouses;
     mapping(string=>uint) nameTokenIdMap;
     mapping(uint=>address) tokenIdToOwnerMap;
 
@@ -86,18 +88,41 @@ contract FilmToken is ERC721 {
         admin = msg.sender;
     }
 
-    function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(msg.sender) onlyAdmin{
+    function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(addr) onlyAdmin{
         productionAddrToNameMap[addr] = name;
+        allProdHouses.push(addr);
+    }
+
+    function getAllProdHouses() public view returns (address[] memory) {
+        return allProdHouses;
     }
     // uint appr, uint depr,uint minTime,uint maxTime, uint baseValue)
 
-    function createMovieToken(string memory movieName, Token memory input) public validProdHouse(msg.sender) duplicateMovieToken(movieName) validMinMaxValues(input.minTime,input.maxTime) validMinMaxValues(input.apprPercent,input.deprPercent){
+    // function createMovieToken(string memory movieName, Token memory input) public validProdHouse(msg.sender) duplicateMovieToken(movieName) validMinMaxValues(input.minTime,input.maxTime) validMinMaxValues(input.apprPercent,input.deprPercent){
+    //     //check if the user is a registerd prod house or not, handled in validProdHouse modifier
+    //     //check for duplicate token
+    //     // string memory prodName = productionAddrToNameMap[msg.sender];
+    //     //check if input values are valid
+    //     // address payable sender = payable(msg.sender);
+    //     Token memory newToken = Token(movieName,tokenIds.current(),input.basePrice,productionAddrToNameMap[msg.sender],payable(msg.sender),input.minTime,input.maxTime,input.apprPercent,input.deprPercent,true);
+
+    //     nameTokenIdMap[movieName] = tokenIds.current();
+    //     tokenIdToTokenMap[tokenIds.current()] = newToken;
+    //     tokenIdToOwnerMap[tokenIds.current()] = msg.sender;
+    //     _safeMint(msg.sender, tokenIds.current());
+    //     tokenIds.increment();
+    //     allTokens.push(newToken);
+
+
+    // }
+
+    function createMovieToken(string memory movieName, uint basePrice,uint baseDays, uint minTime,uint maxTime,uint apprPercent,uint deprPercent) public validProdHouse(msg.sender) duplicateMovieToken(movieName){
         //check if the user is a registerd prod house or not, handled in validProdHouse modifier
         //check for duplicate token
         // string memory prodName = productionAddrToNameMap[msg.sender];
         //check if input values are valid
         // address payable sender = payable(msg.sender);
-        Token memory newToken = Token(movieName,tokenIds.current(),input.basePrice,productionAddrToNameMap[msg.sender],payable(msg.sender),input.minTime,input.maxTime,input.apprPercent,input.deprPercent,true);
+        Token memory newToken = Token(movieName,tokenIds.current(),basePrice,productionAddrToNameMap[msg.sender],payable(msg.sender),minTime,maxTime,apprPercent,deprPercent,baseDays,true);
 
         nameTokenIdMap[movieName] = tokenIds.current();
         tokenIdToTokenMap[tokenIds.current()] = newToken;
@@ -118,24 +143,24 @@ contract FilmToken is ERC721 {
         uint value = token.basePrice;
         uint minDays = token.minTime;
         uint maxDays = token.maxTime;
+        uint baseDays = token.baseDays;
 
-        uint finalValue = value;
+        uint finalValue = value;// case where dayss == baseDays
 
-        if(dayss<0){
-            if(dayss>minDays){//highest cost
-                finalValue += finalValue * (token.apprPercent/100);
-                finalValue += finalValue * (token.apprPercent/100);
-            }else{//second highest
-                finalValue += finalValue * (token.apprPercent/100);
-            }
-        }else if(dayss>0){
-            if(dayss>maxDays){//least cost
-                finalValue -= finalValue * (token.apprPercent/100);
-                finalValue -= finalValue * (token.apprPercent/100);
-            }else{//second least
-                finalValue -= finalValue * (token.apprPercent/100);
-            }
+
+        if(dayss > minDays && dayss < (minDays+ baseDays) / 2 ){ //highest cost
+            finalValue += finalValue * (token.apprPercent/100);
+            finalValue += finalValue * (token.apprPercent/100);
+        }else if(dayss>=(baseDays+dayss)/2 && dayss<baseDays ){//2nd highest
+            finalValue += finalValue * (token.apprPercent/100);
+        }else if(dayss>baseDays && dayss<=(baseDays+maxDays)/2){//second least
+            finalValue -= finalValue * (token.apprPercent/100);
+        }else if(dayss>(baseDays+maxDays)/2){//least most
+            finalValue -= finalValue * (token.apprPercent/100);
+            finalValue -= finalValue * (token.apprPercent/100);
         }
+
+
 
         //get token owner and transfer ether
         token.ownerAddr.transfer(msg.value); // failure of this reverts everything needn't explicitly handle for now, TODO: better, give a proper error message
@@ -184,13 +209,6 @@ contract FilmToken is ERC721 {
             }
         }
         return result;
-    }
-
-    function doSomething(uint x) public {
-        if (x == 0) {
-            revert("x cannot be zero");
-        }
-        // function code goes here
     }
 
 }
