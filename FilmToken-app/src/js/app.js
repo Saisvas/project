@@ -44,29 +44,24 @@ App = {
         $(document).on('click', '#fetchAll', function(){ App.getAllProdHouses(); });
         $(document).on('click', '#registerProd', function(){ var prodName = $('#prodName').val(); var prodAddr = $('#prodAddr').val(); App.registerProductionHouse(prodName, prodAddr); });
         $(document).on('click', '#tokenize', function(){ 
-            var ad = $('#movieName').val(); 
-            var ad1 = $('#movieTokenValue').val();
+            var movieName = $('#movieName').val();
+            var basePrice = $('#movieTokenValue').val();
             var baseDays = $('#baseDays').val();
-            var ad2 = $('#appreciationPercent').val()
-            var ad3 = $('#depriciationPercent').val()
-            var ad4 = $('#earliestReleaseDate').val()
-            var ad5 = $('#finalReleaseDate').val()
-                // [ "RRR",   0,  0.1,  "dvv", "0xaF0f99add34234830D377141e2FA29Fd13aaAdAC",  2,  7, 3, 5,  true ]
-            const struct = {
-                movieName : ad,
-                tokenId : 1,//
-                basePrice : parseInt(ad1),
-                baseDays : parseInt(baseDays),
-                productionCompany : "dvvent",
-                ownerAddr : "0xaF0f99add34234830D377141e2FA29Fd13aaAdAC" ,
-                minTime : parseInt(ad4),
-                maxTime : parseInt(ad5),
-                apprPercent : parseInt(ad2),
-                deprPercent : parseInt(ad3),
-                resale : true
-            }
-            console.log(struct)
-            App.createMovieToken(ad, struct); 
+            var apprPercent = $('#appreciationPercent').val()
+            var deprPercent = $('#depreciationPercent').val()
+            var minTime = $('#earliestReleaseDate').val()
+            var maxTime = $('#finalReleaseDate').val()
+            // const struct = {
+            //     movieName : ad,
+            //     basePrice : parseInt(basePrice),
+            //     baseDays : parseInt(baseDays),
+            //     minTime : parseInt(ad4),
+            //     maxTime : parseInt(ad5),
+            //     apprPercent : parseInt(ad2),
+            //     deprPercent : parseInt(ad3),
+            //     resale : true
+            // }
+            App.createMovieTokenJs(movieName, basePrice, baseDays,apprPercent, deprPercent,minTime, maxTime);
         });
 
     },
@@ -102,22 +97,22 @@ App = {
 
 
 
-    createMovieToken : function(ad, struct) {
+    createMovieTokenJs : function(movieName, basePrice, baseDays,apprPercent, deprPercent,minTime, maxTime) {
         console.log("To check");
         var voteInstance;
-        if(struct.minTime>struct.maxTime || struct.minTime<0 || struct.maxTime<0){
+        if(minTime>maxTime || minTime<0 || maxTime<0){
             alert("Invalid values");
             return;
         }
-        if(struct.apprPercent>struct.maxTime || struct.minTime<0 || struct.maxTime<0){
+        if(apprPercent<0 || deprPercent<0){
             alert("Invalid values");
             return;
         }
         App.contracts.vote.deployed().then(function(instance) {
             voteInstance = instance;
-            console.log(struct.basePrice);
-            console.log(struct.apprPercent);
-            return voteInstance.createMovieToken(ad, parseInt(struct.basePrice),parseInt(struct.baseDays), parseInt(struct.minTime),parseInt(struct.maxTime), parseInt(struct.apprPercent), parseInt(struct.deprPercent));
+            console.log(basePrice);
+            console.log(apprPercent);
+            return voteInstance.createMovieToken(movieName, basePrice,baseDays,minTime,maxTime,apprPercent,deprPercent );
         }).then(function(res){
             console.log(res);
             alert("tokenized");

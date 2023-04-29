@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract MovieToken is ERC721 {
+contract FilmToken is ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter public tokenIds;
 
@@ -116,7 +116,7 @@ contract MovieToken is ERC721 {
 
     // }
 
-    function createMovieToken(string memory movieName, uint basePrice,uint baseDays, uint minTime,uint maxTime,uint apprPercent,uint deprPercent) public validProdHouse(msg.sender) duplicateMovieToken(movieName){
+    function createMovieToken(string memory movieName, uint basePrice,uint baseDays, uint minTime,uint maxTime,uint apprPercent,uint deprPercent) public{
         //check if the user is a registerd prod house or not, handled in validProdHouse modifier
         //check for duplicate token
         // string memory prodName = productionAddrToNameMap[msg.sender];
