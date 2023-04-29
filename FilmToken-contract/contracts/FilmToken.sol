@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract MovieToken is ERC721 {
+contract FilmToken is ERC721 {
     using Counters for Counters.Counter;
     Counters.Counter public tokenIds;
 
@@ -88,14 +88,14 @@ contract MovieToken is ERC721 {
         admin = msg.sender;
     }
 
-    function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(msg.sender) onlyAdmin{
+    function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(addr) onlyAdmin{
         productionAddrToNameMap[addr] = name;
         allProdHouses.push(addr);
     }
 
-    function allProdHouses() public view returns (uint[] memory) {
-        return allProdHouses;
-    }
+    //function allProdHouses() public view returns (uint[] memory) {
+        //return allProdHouses;
+    //}
     // uint appr, uint depr,uint minTime,uint maxTime, uint baseValue)
 
     // function createMovieToken(string memory movieName, Token memory input) public validProdHouse(msg.sender) duplicateMovieToken(movieName) validMinMaxValues(input.minTime,input.maxTime) validMinMaxValues(input.apprPercent,input.deprPercent){
@@ -198,7 +198,7 @@ contract MovieToken is ERC721 {
     }
 
 
-    function viewTokens() public view returns(Token[] memory){
+    function viewTokens() public returns(Token[] memory){
 
         Token[] memory result = new Token[](allTokens.length);
         uint index = 0;

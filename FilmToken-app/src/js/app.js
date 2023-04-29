@@ -41,7 +41,7 @@ App = {
     },
 
     bindEvents: function() {
-        // $(document).on('click', '#register', function(){ var ad = $('#name').val(); var ad1 = $('#address').val(); App.registerProductionHouse(ad, ad1); });
+        //$(document).on('click', '#register', function(){ var ad = $('#name').val(); var ad1 = $('#address').val(); App.registerProductionHouse(ad, ad1); });
         $(document).on('click', '#registerProd', function(){ var prodName = $('#prodName').val(); var prodAddr = $('#prodAddr').val(); App.registerProductionHouse(prodName, prodAddr); });
         $(document).on('click', '#tokenize', function(){ 
             var ad = $('#movieName').val(); 
@@ -52,21 +52,10 @@ App = {
             var ad4 = $('#earliestReleaseDate').val()
             var ad5 = $('#finalReleaseDate').val()
                 // [ "RRR",   0,  0.1,  "dvv", "0xaF0f99add34234830D377141e2FA29Fd13aaAdAC",  2,  7, 3, 5,  true ]
-            const struct = {
-                movieName : ad,
-                tokenId : 1,//
-                basePrice : parseInt(ad1),
-                baseDays : parseInt(baseDays),
-                productionCompany : "dvvent",
-                ownerAddr : "0xaF0f99add34234830D377141e2FA29Fd13aaAdAC" ,
-                minTime : parseInt(ad4),
-                maxTime : parseInt(ad5),
-                apprPercent : parseInt(ad2),
-                deprPercent : parseInt(ad3),
-                resale : true
-            }
-            console.log(struct)
-            App.createMovieToken(ad, struct); 
+            App.createMovieToken(ad, ad1, baseDays, ad4, ad5, ad2, ad3); 
+        });
+        $(document).on('click', '#view', function(){
+            App.viewTokens()
         });
 
     },
@@ -90,7 +79,7 @@ App = {
         var filmInstance;
         App.contracts.vote.deployed().then(function(instance) {
             filmInstance = instance;
-            return filmInstance.registerProductionHouse(prodName.toString(), prodAddr.toString(), {from : web3.eth.accounts[0]});
+            return filmInstance.registerProductionHouse(prodName, prodAddr);//, {from : web3.eth.accounts[0]});
         }).then(function(res){
             console.log(res);
             alert("registered");
@@ -101,26 +90,44 @@ App = {
 
 
 
-    createMovieToken : function(ad, struct) {
+    createMovieToken : function(ad, ad1, baseDays, ad4, ad5, ad2, ad3) {
         console.log("To check");
         var voteInstance;
-        if(struct.minTime>struct.maxTime || struct.minTime<0 || struct.maxTime<0){
-            alert("Invalid values");
-            return;
-        }
-        if(struct.apprPercent>struct.maxTime || struct.minTime<0 || struct.maxTime<0){
-            alert("Invalid values");
-            return;
-        }
+        // if(struct.minTime>struct.maxTime || struct.minTime<0 || struct.maxTime<0){
+        //     alert("Invalid values");
+        //     return;
+        // }
+        // if(struct.apprPercent>struct.maxTime || struct.minTime<0 || struct.maxTime<0){
+        //     alert("Invalid values");
+        //     return;
+        //}
         App.contracts.vote.deployed().then(function(instance) {
             voteInstance = instance;
-            console.log(struct.basePrice);
-            console.log(struct.apprPercent);
-            return voteInstance.createMovieToken(ad, parseInt(struct.basePrice),parseInt(struct.baseDays), parseInt(struct.minTime),parseInt(struct.maxTime), parseInt(struct.apprPercent), parseInt(struct.deprPercent));
+            // console.log(struct.basePrice);
+            // console.log(struct.apprPercent);
+            console.log(web3.eth.accounts[0])
+            return voteInstance.createMovieToken(ad, ad1, baseDays, ad4, ad5, ad2, ad3);
         }).then(function(res){
             console.log(res);
             alert("tokenized");
+        })
+        // .catch(function(err){
+        //     console.log(err.message);
+        // })
+    },
+
+    viewTokens : function() {
+        console.log("view all the movies");
+        console.log(web3.eth.accounts[0]);
+        var filmInstance;
+        App.contracts.vote.deployed().then(function(instance) {
+            filmInstance = instance;
+            return filmInstance.viewTokens();//, {from : web3.eth.accounts[0]});
+        }).then(function(res){
+            console.log(res);
+            alert("all movies displayed");
         }).catch(function(err){
+            console.log(err)
             console.log(err.message);
         })
     }
