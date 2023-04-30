@@ -11,7 +11,7 @@ contract FilmToken is ERC721 {
     struct Token {
         string movieName;
         uint256 tokenId;
-        uint basePrice;
+        uint256 basePrice;
         string productionCompany;
         address payable ownerAddr;
         uint minTime;
@@ -88,42 +88,29 @@ contract FilmToken is ERC721 {
         admin = msg.sender;
     }
 
-    function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(addr) onlyAdmin{
+    function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(addr){
         productionAddrToNameMap[addr] = name;
         allProdHouses.push(addr);
     }
 
     function getAllProdHouses() public view returns (address[] memory) {
-    return allProdHouses;
+        return allProdHouses;
     }
-    // uint appr, uint depr,uint minTime,uint maxTime, uint baseValue)
-
-    // function createMovieToken(string memory movieName, Token memory input) public validProdHouse(msg.sender) duplicateMovieToken(movieName) validMinMaxValues(input.minTime,input.maxTime) validMinMaxValues(input.apprPercent,input.deprPercent){
-    //     //check if the user is a registerd prod house or not, handled in validProdHouse modifier
-    //     //check for duplicate token
-    //     // string memory prodName = productionAddrToNameMap[msg.sender];
-    //     //check if input values are valid
-    //     // address payable sender = payable(msg.sender);
-    //     Token memory newToken = Token(movieName,tokenIds.current(),input.basePrice,productionAddrToNameMap[msg.sender],payable(msg.sender),input.minTime,input.maxTime,input.apprPercent,input.deprPercent,true);
-
-    //     nameTokenIdMap[movieName] = tokenIds.current();
-    //     tokenIdToTokenMap[tokenIds.current()] = newToken;
-    //     tokenIdToOwnerMap[tokenIds.current()] = msg.sender;
-    //     _safeMint(msg.sender, tokenIds.current());
-    //     tokenIds.increment();
-    //     allTokens.push(newToken);
 
 
-    // }
+    event LogValue(uint256 value);
 
-    function createMovieToken(string memory movieName, uint basePrice,uint baseDays, uint minTime,uint maxTime,uint apprPercent,uint deprPercent) public validProdHouse(msg.sender) duplicateMovieToken(movieName){
-        //check if the user is a registerd prod house or not, handled in validProdHouse modifier
+    event LogString(string value);
+
+    event LogAddr(address value);
+    //all user inputted prices are considered as ETH, internally we convert everything again into wei and transact
+    function createMovieToken(string memory movieName, uint256 basePrice,uint baseDays, uint minTime,uint maxTime,uint apprPercent,uint deprPercent) public validProdHouse(msg.sender) duplicateMovieToken(movieName){
+        //check if the user is a registered prod house or not, handled in validProdHouse modifier
         //check for duplicate token
-        // string memory prodName = productionAddrToNameMap[msg.sender];
         //check if input values are valid
-        // address payable sender = payable(msg.sender);
         Token memory newToken = Token(movieName,tokenIds.current(),basePrice,productionAddrToNameMap[msg.sender],payable(msg.sender),minTime,maxTime,apprPercent,deprPercent,baseDays,true);
-
+        emit LogValue(basePrice);
+        emit LogString("In create");
         nameTokenIdMap[movieName] = tokenIds.current();
         tokenIdToTokenMap[tokenIds.current()] = newToken;
         tokenIdToOwnerMap[tokenIds.current()] = msg.sender;
@@ -134,32 +121,43 @@ contract FilmToken is ERC721 {
 
     }
 
+
+
     function buyMovieToken(uint dayss, string memory movieName) public payable validMovieToken(movieName){ //changed tokenId to movieName, as there's no visibility provided right now
         //check if the movieName is valid, in modifier
         //days can be +/-, - represents earlier, + later
         uint tokenId = nameTokenIdMap[movieName];
         Token memory token = tokenIdToTokenMap[tokenId];
         require(token.resale == true, "Resale is not allowed for this movie");
-        uint value = token.basePrice;
+        // uint value = token.basePrice;// base price is already converted from eth->wei
         uint minDays = token.minTime;
-        uint maxDays = token.maxTime;
-        uint baseDays = token.baseDays;
+        // uint maxDays = token.maxTime;
+        // uint baseDays = token.baseDays;
 
-        uint finalValue = value;// case where dayss == baseDays
+        // uint finalValue = value;// case where dayss == baseDays
 
 
-        if(dayss > minDays && dayss < (minDays+ baseDays) / 2 ){ //highest cost
-            finalValue += finalValue * (token.apprPercent/100);
-            finalValue += finalValue * (token.apprPercent/100);
-        }else if(dayss>=(baseDays+dayss)/2 && dayss<baseDays ){//2nd highest
-            finalValue += finalValue * (token.apprPercent/100);
-        }else if(dayss>baseDays && dayss<=(baseDays+maxDays)/2){//second least
-            finalValue -= finalValue * (token.apprPercent/100);
-        }else if(dayss>(baseDays+maxDays)/2){//least most
-            finalValue -= finalValue * (token.apprPercent/100);
-            finalValue -= finalValue * (token.apprPercent/100);
-        }
+        require(dayss >=minDays,"Not allowed before min days");
 
+        require(token.ownerAddr != msg.sender,"You are already the owner");
+        // if(dayss == baseDays){
+        //     finalValue = value; // do nothing case
+        // }else if(dayss>=minDays && dayss<baseDays ){//highest cost
+        //     finalValue += (finalValue/ token.apprPercent);
+        // }else if(dayss>baseDays && dayss<=maxDays){//second least
+        //     emit LogString("second least cost");
+        //     finalValue -= (finalValue/ token.deprPercent);
+        // }else if(dayss>maxDays){//least most
+        //     emit LogString("Least cost");
+        //     finalValue -= (finalValue/ token.deprPercent);
+        //     finalValue -= (finalValue/ token.deprPercent);
+        //     emit LogValue(finalValue);
+        // }
+
+
+        // emit LogValue(finalValue);
+
+        // emit LogValue(msg.value);
 
 
         //get token owner and transfer ether
@@ -174,7 +172,15 @@ contract FilmToken is ERC721 {
         //change in token list
         for(uint i=0;i<allTokens.length;i++){
             if(allTokens[i].tokenId == tokenId){
+                emit LogString("Foundtoken match, id is");
+                emit LogValue(tokenId);
                 allTokens[i].ownerAddr = payable(msg.sender);
+                allTokens[i].basePrice = msg.value/ (10**18);
+                //remap
+                tokenIdToTokenMap[tokenId] = allTokens[i];
+                emit LogAddr(allTokens[i].ownerAddr);
+            }else{
+                emit LogString("No match");
             }
         }
 
@@ -182,11 +188,11 @@ contract FilmToken is ERC721 {
 
 
     function appreciateTokenValue(uint256 tokenId, uint value) public checkTokenOwner(tokenId){ //how will the user know tokenid, remember? give him visibility
-        tokenIdToTokenMap[tokenId].basePrice += value;
+        tokenIdToTokenMap[tokenId].basePrice += (value * 10**18);//value is inputted as eth, changed to wei
     }
 
     function depreciateTokenValue(uint256 tokenId, uint value) public checkTokenOwner(tokenId){
-        tokenIdToTokenMap[tokenId].basePrice -=  value;
+        tokenIdToTokenMap[tokenId].basePrice -=  (value * 10**18);
     }
 
     function enableOrDisableResale(uint tokenId) public checkTokenOwner(tokenId){
@@ -216,34 +222,5 @@ contract FilmToken is ERC721 {
     }
 
 
-    //    function viewTokens() public view returns(uint[] memory,string[] memory,uint[] memory,uint[] memory,uint[] memory,uint[] memory,uint[] memory){
-//
-//        uint[] memory basePrices = new uint[](allTokens.length);
-////        string[] memory companies = new string[](allTokens.length);
-//        string[] memory names = new string[](allTokens.length);
-//
-//        uint[] memory minTimes = new uint[](allTokens.length);
-//        uint[] memory maxTimes = new uint[](allTokens.length);
-//        uint[] memory apprs = new uint[](allTokens.length);
-//        uint[] memory deprs = new uint[](allTokens.length);
-//        uint[] memory baseTimes = new uint[](allTokens.length);
-//
-//        uint index = 0;
-//        for(uint i=0;i<tokenIds.current();i++){ // no support to deleting tokens, so looping through all tokenids is equal to keys
-//            basePrices[index]=tokenIdToTokenMap[i].basePrice;
-////            companies[index]=tokenIdToTokenMap[i].productionCompany;
-//            names[index] =tokenIdToTokenMap[i].movieName;
-//            minTimes[index] =tokenIdToTokenMap[i].minTime;
-//            maxTimes[index] =tokenIdToTokenMap[i].maxTime;
-//            apprs[index] =tokenIdToTokenMap[i].apprPercent;
-//            deprs[index] =tokenIdToTokenMap[i].deprPercent;
-//            baseTimes[index] =tokenIdToTokenMap[i].baseDays;
-//
-//            // if(tokenIdToTokenMap[i].ownerAddr == msg.sender){
-//            //     result[index++]=tokenIdToTokenMap[i];
-//            // }
-//        }
-//        return (basePrices,names,minTimes,maxTimes,apprs,deprs,baseTimes);
-//    }
 
 }

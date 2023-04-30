@@ -68,19 +68,38 @@ App = {
             var deprPercent = $('#depreciationPercent').val()
             var minTime = $('#earliestReleaseDate').val()
             var maxTime = $('#finalReleaseDate').val()
-            // const struct = {
-            //     movieName : ad,
-            //     basePrice : parseInt(basePrice),
-            //     baseDays : parseInt(baseDays),
-            //     minTime : parseInt(ad4),
-            //     maxTime : parseInt(ad5),
-            //     apprPercent : parseInt(ad2),
-            //     deprPercent : parseInt(ad3),
-            //     resale : true
-            // }
+
+            const valueInWei = BigInt(basePrice) * BigInt(10**18);
+            console.log(basePrice);
             App.createMovieTokenJs(movieName, basePrice, baseDays,apprPercent, deprPercent,minTime, maxTime);
         });
         document.getElementById("clickUsers").onclick = App.viewTokens();
+        // $(document).on('click', '#buyToken', function(){
+        //     var days = $('#days').val();
+        //     var movieName = $('#prodAddr').val();
+        //     var baseDays = $('#baseDaysBuy').val();
+        //     var minDays = $('#minDaysBuy').val();
+        //     var maxDays = $('#maxDaysBuy').val();
+        //     var baseVal = $('#baseValBuy').val();
+        //     var apprPercent = $('#apprBuy').val();
+        //     var deprPercent = $('#deprBuy').val();
+        //
+        //     var finalValue = baseVal;
+        //     if(days == baseDays){
+        //         finalValue = baseVal; // do nothing case
+        //     }else if(days>=minDays && days<baseDays ){//highest cost
+        //         finalValue += (finalValue/ apprPercent);
+        //     }else if(days>baseDays && days<=maxDays){//second least
+        //         finalValue -= (finalValue/ deprPercent);
+        //     }else if(days>maxDays){//least most
+        //         finalValue -= (finalValue/ deprPercent);
+        //         finalValue -= (finalValue/ deprPercent);
+        //
+        //     }
+        //
+        //     App.handleBuy(days, movieName, finalValue);
+        // });
+
 
 
     },
@@ -117,6 +136,30 @@ App = {
         })
     },
 
+    handleBuy : function(days, movieName, finalValue) {
+        console.log("Buy token");
+        console.log(days);
+        console.log(movieName);
+        console.log(finalValue);
+        // console.log(web3.eth.accounts[0]);
+        // console.log(prodAddr);
+        var filmInstance;
+        App.contracts.vote.deployed().then(function(instance) {
+            // const amountToSend = web3.utils.toWei(finalValue.toString(), 'wei');
+
+            filmInstance = instance;
+            return filmInstance.buyMovieToken(days, movieName, {from : web3.eth.accounts[0], value: finalValue.toString()});
+        }).then(function(res){
+            console.log(res);
+            toastr.options.timeOut = 4000;
+            toastr.success("Purchased!");
+        }).catch(function(err){
+            console.log(err.message);
+            toastr.options.timeOut = 4000;
+            toastr.error("Failed");
+        })
+    },
+
 
 
     createMovieTokenJs : function(movieName, basePrice, baseDays,apprPercent, deprPercent,minTime, maxTime) {
@@ -134,7 +177,7 @@ App = {
             voteInstance = instance;
             console.log(basePrice);
             console.log(apprPercent);
-            return voteInstance.createMovieToken(movieName, basePrice,baseDays,minTime,maxTime,apprPercent,deprPercent );
+            return voteInstance.createMovieToken(movieName, basePrice,baseDays,minTime,maxTime,apprPercent,deprPercent,{from : web3.eth.accounts[0]} );
         }).then(function(res){
             console.log(res);
             alert("tokenized");
@@ -198,12 +241,6 @@ App = {
                     resale: res[i][10]
                 };
                 tokenList.push(tempToken);
-
-
-
-
-                // App.displayTokens();
-
 
             }
             angular.element(document.querySelector('[ng-controller="myCtrl"]')).scope().copyData(tokenList) ;
@@ -281,6 +318,27 @@ angularApp.controller('myCtrl', function($scope) {
         $scope.tokens = data;
         console.log($scope.tokens.length);
         $scope.$apply();// to reflect this change in the view
+    }
+
+    //alone function
+    $scope.buyToken = function (days, movieName, baseDays, minDays, maxDays, baseVal, apprPercent, deprPercent){
+
+        let finalValue = BigInt(baseVal) * BigInt(10**18);
+        if(days == baseDays){
+            finalValue = BigInt(baseVal) * BigInt(10**18);; // do nothing case
+        }else if(days>=minDays && days<baseDays ){//highest cost
+            finalValue += (finalValue/ BigInt(apprPercent));
+        }else if(days>baseDays && days<=maxDays){//second least
+            finalValue -= (finalValue/ BigInt(deprPercent));
+        }else if(days>maxDays){//least most
+            finalValue -= (finalValue/ BigInt(deprPercent));
+            finalValue -= (finalValue/ BigInt(deprPercent));
+
+        }
+        console.log(days);
+        console.log(movieName);
+        console.log(finalValue);
+        App.handleBuy(days, movieName, finalValue);
     }
 
 
