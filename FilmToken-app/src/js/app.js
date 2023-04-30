@@ -1,3 +1,18 @@
+const Token = {
+    tokenId: 0,
+    movieName: "",
+    basePrice: 0,
+    productionCompany: "",
+    ownerAddr: "",
+    minTime: 0,
+    maxTime: 0,
+    apprPercent: 0,
+    deprPercent: 0,
+    baseDays: 0,
+    resale: false
+}
+let tokenList = [];
+
 App = {
     web3Provider: null,
     contracts: {},
@@ -8,6 +23,7 @@ App = {
     init: function() {
         return App.initWeb3();
     },
+
 
     initWeb3: function() {
         // Is there is an injected web3 instance?
@@ -43,7 +59,7 @@ App = {
     bindEvents: function() {
         $(document).on('click', '#fetchAll', function(){ App.getAllProdHouses(); });
         $(document).on('click', '#registerProd', function(){ var prodName = $('#prodName').val(); var prodAddr = $('#prodAddr').val(); App.registerProductionHouse(prodName, prodAddr); });
-        $(document).on('click', '#tokenize', function(){ 
+        $(document).on('click', '#tokenize', function(){
             var movieName = $('#movieName').val();
             var basePrice = $('#movieTokenValue').val();
             var baseDays = $('#baseDays').val();
@@ -62,6 +78,9 @@ App = {
             //     resale : true
             // }
             App.createMovieTokenJs(movieName, basePrice, baseDays,apprPercent, deprPercent,minTime, maxTime);
+        });
+        $(document).on('click', '#view', function(){
+            App.viewTokens()
         });
 
     },
@@ -100,14 +119,14 @@ App = {
     createMovieTokenJs : function(movieName, basePrice, baseDays,apprPercent, deprPercent,minTime, maxTime) {
         console.log("To check");
         var voteInstance;
-        if(minTime>maxTime || minTime<0 || maxTime<0){
-            alert("Invalid values");
-            return;
-        }
-        if(apprPercent<0 || deprPercent<0){
-            alert("Invalid values");
-            return;
-        }
+        // if(minTime>maxTime || minTime<0 || maxTime<0){
+        //     alert("Invalid values");
+        //     return;
+        // }
+        // if(apprPercent<0 || deprPercent<0){
+        //     alert("Invalid values");
+        //     return;
+        // }
         App.contracts.vote.deployed().then(function(instance) {
             voteInstance = instance;
             console.log(basePrice);
@@ -132,7 +151,95 @@ App = {
         }).catch(function(err){
             console.log(err.message);
         })
+    },
+
+    viewTokens : function() {
+        tokenList = [];
+        var filmInstance;
+        console.log("view all the movies");
+        var ids = 0;
+        App.contracts.vote.deployed().then(function(instance) {
+            filmInstance = instance;
+            return filmInstance.getAllTokenIds();
+        }).then(function(res){
+            // console.log(res);
+            console.log(res.c[0]);
+            ids = res.c[0];
+            console.log("Token count fetched");
+            return ids;
+        }).then(function(res){
+            // console.log(res);
+            console.log(res);
+            var promises = [];
+            for (var i=0;i<res;i++) {
+                promises.push(filmInstance.tokenIdToTokenMap(i));
+            }
+            console.log("Token count fetched");
+            alert("all movies displayed");
+            return Promise.all(promises);
+        }).then(function(res){
+            console.log("Final block");
+            console.log(res);
+            for(let i=0;i<res.length;i++){
+                var tempToken = {
+                    movieName: res[i][0],
+                    tokenId: res[i][1].c[0],
+                    basePrice: res[i][2].c[0],
+                    productionCompany: res[i][3],
+                    ownerAddr: res[i][4],
+                    minTime: res[i][5].c[0],
+                    maxTime: res[i][6].c[0],
+                    apprPercent: res[i][7].c[0],
+                    deprPercent: res[i][8].c[0],
+                    baseDays: res[i][9].c[0],
+                    resale: res[i][10]
+                };
+                tokenList.push(tempToken);
+                App.displayTokens();
+
+
+                // console.log(res[i][0]);// MovieName
+                // console.log(res[i][1].c[0]);
+                // console.log(res[i][2].c[0]);
+                // console.log(res[i][3]);
+                // console.log(res[i][4]);
+                // console.log(res[i][5].c[0]);
+                // console.log(res[i][6].c[0]);
+                // console.log(res[i][7].c[0]);
+                // console.log(res[i][8].c[0]);
+                // console.log(res[i][9].c[0]);
+
+
+            }
+
+        }).catch(function(err){
+            console.log(err)
+            console.log(err.message);
+        })
+
+    },
+
+
+    displayTokens: function() {
+        var $tokens = $("#displayList");
+        $tokens.empty();
+        for (var i = 0; i < tokenList.length; i++) {
+            var $newTokenRow = $("<tr>");
+            $newTokenRow.append("<td>" + tokenList[i].tokenId + "</td>");
+            $newTokenRow.append("<td>" + tokenList[i].movieName + "</td>");
+            $newTokenRow.append("<td>" + tokenList[i].basePrice + "</td>");
+            $newTokenRow.append("<td>" + tokenList[i].productionCompany + "</td>");
+            $newTokenRow.append("<td>" + tokenList[i].ownerAddr + "</td>");
+            $newTokenRow.append("<td>" + tokenList[i].minTime + "</td>");
+            $newTokenRow.append("<td>" + tokenList[i].maxTime + "</td>");
+            $newTokenRow.append("<td>" + tokenList[i].apprPercent + "</td>");
+            $newTokenRow.append("<td>" + tokenList[i].deprPercent + "</td>");
+            $newTokenRow.append("<td>" + tokenList[i].baseDays + "</td>");
+            $newTokenRow.append("<td>" + tokenList[i].resale + "</td>");
+            $tokens.append($newTokenRow);
+        }
     }
+
 };
 
 
