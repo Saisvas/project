@@ -21,6 +21,7 @@ App = {
     //chairPerson:null,
     currentAccount:null,
     init: function() {
+        console.log("NON ANGJS");
         return App.initWeb3();
     },
 
@@ -79,9 +80,8 @@ App = {
             // }
             App.createMovieTokenJs(movieName, basePrice, baseDays,apprPercent, deprPercent,minTime, maxTime);
         });
-        $(document).on('click', '#view', function(){
-            App.viewTokens()
-        });
+        document.getElementById("clickUsers").onclick = App.viewTokens();
+
 
     },
 
@@ -108,9 +108,12 @@ App = {
             return filmInstance.registerProductionHouse(prodName, prodAddr, {from : web3.eth.accounts[0]});
         }).then(function(res){
             console.log(res);
-            alert("registered");
+            toastr.options.timeOut = 4000;
+            toastr.success("Registered!");
         }).catch(function(err){
-            console.log(err.message);
+            console.log(err.message.value);
+            toastr.options.timeOut = 4000;
+            toastr.error(err.message);
         })
     },
 
@@ -175,7 +178,7 @@ App = {
                 promises.push(filmInstance.tokenIdToTokenMap(i));
             }
             console.log("Token count fetched");
-            alert("all movies displayed");
+            // alert("all movies displayed");
             return Promise.all(promises);
         }).then(function(res){
             console.log("Final block");
@@ -195,23 +198,15 @@ App = {
                     resale: res[i][10]
                 };
                 tokenList.push(tempToken);
-                App.displayTokens();
 
 
-                // console.log(res[i][0]);// MovieName
-                // console.log(res[i][1].c[0]);
-                // console.log(res[i][2].c[0]);
-                // console.log(res[i][3]);
-                // console.log(res[i][4]);
-                // console.log(res[i][5].c[0]);
-                // console.log(res[i][6].c[0]);
-                // console.log(res[i][7].c[0]);
-                // console.log(res[i][8].c[0]);
-                // console.log(res[i][9].c[0]);
+
+
+                // App.displayTokens();
 
 
             }
-
+            angular.element(document.querySelector('[ng-controller="myCtrl"]')).scope().copyData(tokenList) ;
         }).catch(function(err){
             console.log(err)
             console.log(err.message);
@@ -221,26 +216,77 @@ App = {
 
 
     displayTokens: function() {
-        var $tokens = $("#displayList");
-        $tokens.empty();
-        for (var i = 0; i < tokenList.length; i++) {
-            var $newTokenRow = $("<tr>");
-            $newTokenRow.append("<td>" + tokenList[i].tokenId + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].movieName + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].basePrice + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].productionCompany + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].ownerAddr + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].minTime + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].maxTime + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].apprPercent + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].deprPercent + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].baseDays + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].resale + "</td>");
-            $tokens.append($newTokenRow);
-        }
+
+        var container = $('#displayList');
+
+        // Loop through each item in the list
+        $.each(tokenList, function(index, item) {
+            // Create a new row element with Bootstrap classes
+            var row = $('<div>', {'class': 'row mt-3 border p-3 rounded'});
+
+            // Add columns to the row
+            var col1 = $('<div>', {'class': 'col-md-3'}).text(item.movieName);
+            var col2 = $('<div>').text(item.basePrice);
+            var col3 = $('<div>').text(item.productionCompany);
+            var col4 = $('<div>').text(item.ownerAddr);
+            var col5 = $('<div>').text(item.minTime);
+            var col6 = $('<div>').text(item.maxTime);
+            var col7 = $('<div>').text(item.apprPercent);
+            var col8 = $('<div>').text(item.deprPercent);
+            var col9 = $('<div>').text(item.baseDays);
+            var col10 = $('<button onclick="App.buyToken(' + tokenList[i].movieName + ')">Buy</button>');
+
+            // Append the columns to the row
+            row.append(col1).append(col2).append(col3).append(col4).append(col5).append(col6).append(col7).append(col8).append(col9).append(col10);
+
+            // Append the row to the container
+            container.append(row);
+        });
+        // var $tokens = $("#displayList");
+        // $tokens.empty();
+        // for (var i = 0; i < tokenList.length; i++) {
+        //     var $newTokenRow = $("<tr>");
+        //     $newTokenRow.append("<td>" + tokenList[i].tokenId + "</td>");
+        //     $newTokenRow.append("<td>" + tokenList[i].movieName + "</td>");
+        //     $newTokenRow.append("<td>" + tokenList[i].basePrice + "</td>");
+        //     $newTokenRow.append("<td>" + tokenList[i].productionCompany + "</td>");
+        //     $newTokenRow.append("<td>" + tokenList[i].ownerAddr + "</td>");
+        //     $newTokenRow.append("<td>" + tokenList[i].minTime + "</td>");
+        //     $newTokenRow.append("<td>" + tokenList[i].maxTime + "</td>");
+        //     $newTokenRow.append("<td>" + tokenList[i].apprPercent + "</td>");
+        //     $newTokenRow.append("<td>" + tokenList[i].deprPercent + "</td>");
+        //     $newTokenRow.append("<td>" + tokenList[i].baseDays + "</td>");
+        //     $newTokenRow.append("<td>" + tokenList[i].resale + "</td>");
+        //     $newTokenRow.append('<button onclick="App.buyToken(' + tokenList[i].movieName + ')">Buy</button>');
+        //     $tokens.append($newTokenRow);
+        // }
+    },
+
+
+
+    buyToken: function(){
+
     }
 
 };
+
+var angularApp = angular.module('myApp', []);
+angularApp.controller('myCtrl', function($scope) {
+    console.log("ANGJS");
+
+    $scope.some = "Fetch";
+    $scope.tokens = [];
+    $scope.tokens.push($scope.tempToken);
+    $scope.copyData = function(data){
+        $scope.tokens = data;
+        console.log($scope.tokens.length);
+        $scope.$apply();// to reflect this change in the view
+    }
+
+
+
+
+});
 
 
 $(function() {
