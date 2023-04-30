@@ -94,7 +94,7 @@ contract FilmToken is ERC721 {
     }
 
     function getAllProdHouses() public view returns (address[] memory) {
-        return allProdHouses;
+    return allProdHouses;
     }
     // uint appr, uint depr,uint minTime,uint maxTime, uint baseValue)
 
@@ -116,7 +116,7 @@ contract FilmToken is ERC721 {
 
     // }
 
-    function createMovieToken(string memory movieName, uint basePrice,uint baseDays, uint minTime,uint maxTime,uint apprPercent,uint deprPercent) public{
+    function createMovieToken(string memory movieName, uint basePrice,uint baseDays, uint minTime,uint maxTime,uint apprPercent,uint deprPercent) public validProdHouse(msg.sender) duplicateMovieToken(movieName){
         //check if the user is a registerd prod house or not, handled in validProdHouse modifier
         //check for duplicate token
         // string memory prodName = productionAddrToNameMap[msg.sender];
@@ -202,13 +202,48 @@ contract FilmToken is ERC721 {
 
         Token[] memory result = new Token[](allTokens.length);
         uint index = 0;
-        for(uint i=0;i<=tokenIds.current();i++){ // no support to deleting tokens, so looping through all tokenids is equal to keys
-
-            if(tokenIdToTokenMap[i].ownerAddr == msg.sender){
-                result[index++]=tokenIdToTokenMap[i];
-            }
+        for(uint i=0;i<tokenIds.current();i++){ // no support to deleting tokens, so looping through all tokenids is equal to keys
+            result[index++]=tokenIdToTokenMap[i];
+            // if(tokenIdToTokenMap[i].ownerAddr == msg.sender){
+            //     result[index++]=tokenIdToTokenMap[i];
+            // }
         }
         return result;
     }
+
+    function getAllTokenIds() public view returns (uint) {
+        return tokenIds.current();
+    }
+
+
+    //    function viewTokens() public view returns(uint[] memory,string[] memory,uint[] memory,uint[] memory,uint[] memory,uint[] memory,uint[] memory){
+//
+//        uint[] memory basePrices = new uint[](allTokens.length);
+////        string[] memory companies = new string[](allTokens.length);
+//        string[] memory names = new string[](allTokens.length);
+//
+//        uint[] memory minTimes = new uint[](allTokens.length);
+//        uint[] memory maxTimes = new uint[](allTokens.length);
+//        uint[] memory apprs = new uint[](allTokens.length);
+//        uint[] memory deprs = new uint[](allTokens.length);
+//        uint[] memory baseTimes = new uint[](allTokens.length);
+//
+//        uint index = 0;
+//        for(uint i=0;i<tokenIds.current();i++){ // no support to deleting tokens, so looping through all tokenids is equal to keys
+//            basePrices[index]=tokenIdToTokenMap[i].basePrice;
+////            companies[index]=tokenIdToTokenMap[i].productionCompany;
+//            names[index] =tokenIdToTokenMap[i].movieName;
+//            minTimes[index] =tokenIdToTokenMap[i].minTime;
+//            maxTimes[index] =tokenIdToTokenMap[i].maxTime;
+//            apprs[index] =tokenIdToTokenMap[i].apprPercent;
+//            deprs[index] =tokenIdToTokenMap[i].deprPercent;
+//            baseTimes[index] =tokenIdToTokenMap[i].baseDays;
+//
+//            // if(tokenIdToTokenMap[i].ownerAddr == msg.sender){
+//            //     result[index++]=tokenIdToTokenMap[i];
+//            // }
+//        }
+//        return (basePrices,names,minTimes,maxTimes,apprs,deprs,baseTimes);
+//    }
 
 }
