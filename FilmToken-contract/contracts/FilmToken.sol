@@ -84,6 +84,13 @@ contract FilmToken is ERC721 {
         _;
     }
 
+    event newMovie(string text,string name);
+    event movieSold(string text,string name);
+    event moviePriceAppr(uint apprPrice);
+    event moviePriceDepr(uint deprPrice);
+    event movieResale(string movieName, bool resale);
+    event registerProdHouse(string text, string prodName);
+
     constructor() ERC721("MovieTokenization","MVTK"){
         admin = msg.sender;
     }
@@ -91,6 +98,8 @@ contract FilmToken is ERC721 {
     function registerProductionHouse(string memory name,address addr) public duplicateProdHouse(addr){
         productionAddrToNameMap[addr] = name;
         allProdHouses.push(addr);
+        emit registerProdHouse("New event: Prod House registered",name);
+
     }
 
     function getAllProdHouses() public view returns (address[] memory) {
@@ -98,25 +107,21 @@ contract FilmToken is ERC721 {
     }
 
 
-    event LogValue(uint256 value);
 
-    event LogString(string value);
-
-    event LogAddr(address value);
     //all user inputted prices are considered as ETH, internally we convert everything again into wei and transact
     function createMovieToken(string memory movieName, uint256 basePrice,uint baseDays, uint minTime,uint maxTime,uint apprPercent,uint deprPercent) public validProdHouse(msg.sender) duplicateMovieToken(movieName){
         //check if the user is a registered prod house or not, handled in validProdHouse modifier
         //check for duplicate token
         //check if input values are valid
         Token memory newToken = Token(movieName,tokenIds.current(),basePrice,productionAddrToNameMap[msg.sender],payable(msg.sender),minTime,maxTime,apprPercent,deprPercent,baseDays,true);
-        emit LogValue(basePrice);
-        emit LogString("In create");
         nameTokenIdMap[movieName] = tokenIds.current();
         tokenIdToTokenMap[tokenIds.current()] = newToken;
         tokenIdToOwnerMap[tokenIds.current()] = msg.sender;
         _safeMint(msg.sender, tokenIds.current());
         tokenIds.increment();
         allTokens.push(newToken);
+
+        emit newMovie("New event: Token Purchased", movieName);
 
 
     }
@@ -140,24 +145,6 @@ contract FilmToken is ERC721 {
         require(dayss >=minDays,"Not allowed before min days");
 
         require(token.ownerAddr != msg.sender,"You are already the owner");
-        // if(dayss == baseDays){
-        //     finalValue = value; // do nothing case
-        // }else if(dayss>=minDays && dayss<baseDays ){//highest cost
-        //     finalValue += (finalValue/ token.apprPercent);
-        // }else if(dayss>baseDays && dayss<=maxDays){//second least
-        //     emit LogString("second least cost");
-        //     finalValue -= (finalValue/ token.deprPercent);
-        // }else if(dayss>maxDays){//least most
-        //     emit LogString("Least cost");
-        //     finalValue -= (finalValue/ token.deprPercent);
-        //     finalValue -= (finalValue/ token.deprPercent);
-        //     emit LogValue(finalValue);
-        // }
-
-
-        // emit LogValue(finalValue);
-
-        // emit LogValue(msg.value);
 
 
         //get token owner and transfer ether
@@ -172,27 +159,23 @@ contract FilmToken is ERC721 {
         //change in token list
         for(uint i=0;i<allTokens.length;i++){
             if(allTokens[i].tokenId == tokenId){
-                emit LogString("Foundtoken match, id is");
-                emit LogValue(tokenId);
                 allTokens[i].ownerAddr = payable(msg.sender);
                 allTokens[i].basePrice = msg.value/ (10**18);
                 //remap
                 tokenIdToTokenMap[tokenId] = allTokens[i];
-                emit LogAddr(allTokens[i].ownerAddr);
-            }else{
-                emit LogString("No match");
             }
         }
+        emit movieSold("New event: Token Purchased ",tokenIdToTokenMap[tokenId].movieName);
 
     }
 
 
     function appreciateTokenValue(uint256 tokenId, uint value) public checkTokenOwner(tokenId){ //how will the user know tokenid, remember? give him visibility
-        tokenIdToTokenMap[tokenId].basePrice += (value * 10**18);//value is inputted as eth, changed to wei
+        tokenIdToTokenMap[tokenId].basePrice += (value);
     }
 
     function depreciateTokenValue(uint256 tokenId, uint value) public checkTokenOwner(tokenId){
-        tokenIdToTokenMap[tokenId].basePrice -=  (value * 10**18);
+        tokenIdToTokenMap[tokenId].basePrice -=  (value);
     }
 
     function enableOrDisableResale(uint tokenId) public checkTokenOwner(tokenId){
@@ -213,6 +196,19 @@ contract FilmToken is ERC721 {
             // if(tokenIdToTokenMap[i].ownerAddr == msg.sender){
             //     result[index++]=tokenIdToTokenMap[i];
             // }
+        }
+        return result;
+    }
+
+    function viewMyTokens() public view returns(Token[] memory){
+
+        Token[] memory result = new Token[](allTokens.length);
+        uint index = 0;
+        for(uint i=0;i<tokenIds.current();i++){ // no support to deleting tokens, so looping through all tokenids is equal to keys
+            result[index++]=tokenIdToTokenMap[i];
+             if(tokenIdToTokenMap[i].ownerAddr == msg.sender){
+                 result[index++]=tokenIdToTokenMap[i];
+             }
         }
         return result;
     }

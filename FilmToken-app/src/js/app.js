@@ -52,7 +52,6 @@ App = {
             // Set the provider for our contract
             App.contracts.vote.setProvider(App.web3Provider);
 
-            // App.getChairperson();
             return App.bindEvents();
         });
     },
@@ -74,31 +73,7 @@ App = {
             App.createMovieTokenJs(movieName, basePrice, baseDays,apprPercent, deprPercent,minTime, maxTime);
         });
         document.getElementById("clickUsers").onclick = App.viewTokens();
-        // $(document).on('click', '#buyToken', function(){
-        //     var days = $('#days').val();
-        //     var movieName = $('#prodAddr').val();
-        //     var baseDays = $('#baseDaysBuy').val();
-        //     var minDays = $('#minDaysBuy').val();
-        //     var maxDays = $('#maxDaysBuy').val();
-        //     var baseVal = $('#baseValBuy').val();
-        //     var apprPercent = $('#apprBuy').val();
-        //     var deprPercent = $('#deprBuy').val();
-        //
-        //     var finalValue = baseVal;
-        //     if(days == baseDays){
-        //         finalValue = baseVal; // do nothing case
-        //     }else if(days>=minDays && days<baseDays ){//highest cost
-        //         finalValue += (finalValue/ apprPercent);
-        //     }else if(days>baseDays && days<=maxDays){//second least
-        //         finalValue -= (finalValue/ deprPercent);
-        //     }else if(days>maxDays){//least most
-        //         finalValue -= (finalValue/ deprPercent);
-        //         finalValue -= (finalValue/ deprPercent);
-        //
-        //     }
-        //
-        //     App.handleBuy(days, movieName, finalValue);
-        // });
+        // document.getElementById("myTokensClick").onclick = angularApp.viewMyTokens();
 
 
 
@@ -128,6 +103,11 @@ App = {
         }).then(function(res){
             console.log(res);
             toastr.options.timeOut = 4000;
+
+            var events = res.logs;
+            toastr.options.timeOut = 4000;
+            toastr.info(events[0].args.text + events[0].args.prodName);
+
             toastr.success("Registered!");
         }).catch(function(err){
             console.log(err.message.value);
@@ -141,11 +121,9 @@ App = {
         console.log(days);
         console.log(movieName);
         console.log(finalValue);
-        // console.log(web3.eth.accounts[0]);
-        // console.log(prodAddr);
+
         var filmInstance;
         App.contracts.vote.deployed().then(function(instance) {
-            // const amountToSend = web3.utils.toWei(finalValue.toString(), 'wei');
 
             filmInstance = instance;
             return filmInstance.buyMovieToken(days, movieName, {from : web3.eth.accounts[0], value: finalValue.toString()});
@@ -159,6 +137,53 @@ App = {
             toastr.error("Failed");
         })
     },
+
+    enableDis : function (tokenId){
+        App.contracts.vote.deployed().then(function(instance) {
+            filmInstance = instance;
+            return filmInstance.enableOrDisableResale(tokenId, {from : web3.eth.accounts[0]});
+        }).then(function(res){
+            console.log(res);
+            toastr.options.timeOut = 4000;
+            toastr.success("Toggled!");
+        }).catch(function(err){
+            console.log(err.message);
+            toastr.options.timeOut = 4000;
+            toastr.error("Failed");
+        })
+    },
+
+    incrDecr : function (tokenId, value, flag){
+        if(flag==0){//decrease
+            App.contracts.vote.deployed().then(function(instance) {
+                filmInstance = instance;
+                return filmInstance.depreciateTokenValue(tokenId, value, {from : web3.eth.accounts[0]});
+            }).then(function(res){
+                console.log(res);
+                toastr.options.timeOut = 4000;
+                toastr.success("Toggled!");
+            }).catch(function(err){
+                console.log(err.message);
+                toastr.options.timeOut = 4000;
+                toastr.error("Failed");
+            })
+        } else {
+            App.contracts.vote.deployed().then(function (instance) {
+                filmInstance = instance;
+                return filmInstance.appreciateTokenValue(tokenId, value, {from: web3.eth.accounts[0]});
+            }).then(function (res) {
+                console.log(res);
+                toastr.options.timeOut = 4000;
+                toastr.success("Toggled!");
+            }).catch(function (err) {
+                console.log(err.message);
+                toastr.options.timeOut = 4000;
+                toastr.error("Failed");
+            })
+        }
+
+    },
+
 
 
 
@@ -243,7 +268,8 @@ App = {
                 tokenList.push(tempToken);
 
             }
-            angular.element(document.querySelector('[ng-controller="myCtrl"]')).scope().copyData(tokenList) ;
+            angular.element(document.querySelector('[ng-controller="myCtrl"]')).scope().copyData(tokenList, web3.eth.accounts[0].toString()) ;
+            // angular.element(document.querySelector('[ng-controller="myCtrl"]')).scope().copyMyTokens(tokenList) ;
         }).catch(function(err){
             console.log(err)
             console.log(err.message);
@@ -252,58 +278,8 @@ App = {
     },
 
 
-    displayTokens: function() {
-
-        var container = $('#displayList');
-
-        // Loop through each item in the list
-        $.each(tokenList, function(index, item) {
-            // Create a new row element with Bootstrap classes
-            var row = $('<div>', {'class': 'row mt-3 border p-3 rounded'});
-
-            // Add columns to the row
-            var col1 = $('<div>', {'class': 'col-md-3'}).text(item.movieName);
-            var col2 = $('<div>').text(item.basePrice);
-            var col3 = $('<div>').text(item.productionCompany);
-            var col4 = $('<div>').text(item.ownerAddr);
-            var col5 = $('<div>').text(item.minTime);
-            var col6 = $('<div>').text(item.maxTime);
-            var col7 = $('<div>').text(item.apprPercent);
-            var col8 = $('<div>').text(item.deprPercent);
-            var col9 = $('<div>').text(item.baseDays);
-            var col10 = $('<button onclick="App.buyToken(' + tokenList[i].movieName + ')">Buy</button>');
-
-            // Append the columns to the row
-            row.append(col1).append(col2).append(col3).append(col4).append(col5).append(col6).append(col7).append(col8).append(col9).append(col10);
-
-            // Append the row to the container
-            container.append(row);
-        });
-        // var $tokens = $("#displayList");
-        // $tokens.empty();
-        // for (var i = 0; i < tokenList.length; i++) {
-        //     var $newTokenRow = $("<tr>");
-        //     $newTokenRow.append("<td>" + tokenList[i].tokenId + "</td>");
-        //     $newTokenRow.append("<td>" + tokenList[i].movieName + "</td>");
-        //     $newTokenRow.append("<td>" + tokenList[i].basePrice + "</td>");
-        //     $newTokenRow.append("<td>" + tokenList[i].productionCompany + "</td>");
-        //     $newTokenRow.append("<td>" + tokenList[i].ownerAddr + "</td>");
-        //     $newTokenRow.append("<td>" + tokenList[i].minTime + "</td>");
-        //     $newTokenRow.append("<td>" + tokenList[i].maxTime + "</td>");
-        //     $newTokenRow.append("<td>" + tokenList[i].apprPercent + "</td>");
-        //     $newTokenRow.append("<td>" + tokenList[i].deprPercent + "</td>");
-        //     $newTokenRow.append("<td>" + tokenList[i].baseDays + "</td>");
-        //     $newTokenRow.append("<td>" + tokenList[i].resale + "</td>");
-        //     $newTokenRow.append('<button onclick="App.buyToken(' + tokenList[i].movieName + ')">Buy</button>');
-        //     $tokens.append($newTokenRow);
-        // }
-    },
 
 
-
-    buyToken: function(){
-
-    }
 
 };
 
@@ -313,19 +289,39 @@ angularApp.controller('myCtrl', function($scope) {
 
     $scope.some = "Fetch";
     $scope.tokens = [];
+    $scope.myTokenList=[];
     $scope.tokens.push($scope.tempToken);
-    $scope.copyData = function(data){
+    $scope.copyData = function(data,address){
         $scope.tokens = data;
         console.log($scope.tokens.length);
+
+        for(var i=0;i<$scope.tokens.length;i++){
+            console.log($scope.tokens[i]);
+            console.log(address);
+            if($scope.tokens[i].ownerAddr === address)
+                $scope.myTokenList.push($scope.tokens[i]);
+        }
         $scope.$apply();// to reflect this change in the view
     }
+
+    $scope.increaseDecrease = function(tokenId, value, flag){
+        console.log("inside incr decr");
+        console.log(tokenId);
+        console.log(value);
+        App.incrDecr(tokenId, value, flag);
+    }
+
+    $scope.enableDisable = function(tokenId,resale){
+        App.enableDis(tokenId, resale);
+    }
+
 
     //alone function
     $scope.buyToken = function (days, movieName, baseDays, minDays, maxDays, baseVal, apprPercent, deprPercent){
 
         let finalValue = BigInt(baseVal) * BigInt(10**18);
         if(days == baseDays){
-            finalValue = BigInt(baseVal) * BigInt(10**18);; // do nothing case
+            finalValue = BigInt(baseVal) * BigInt(10**18); // do nothing case
         }else if(days>=minDays && days<baseDays ){//highest cost
             finalValue += (finalValue/ BigInt(apprPercent));
         }else if(days>baseDays && days<=maxDays){//second least

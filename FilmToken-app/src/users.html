@@ -15,6 +15,44 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.0.1/css/toastr.css" rel="stylesheet"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/2.0.1/js/toastr.js"></script>
     <link rel="stylesheet" href="styles.css">
+
+    <style>
+        .card {
+            background-color: #f7f7f7;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-body {
+            color: #333;
+        }
+
+        .form-label {
+            color: #666;
+        }
+
+        .btn-primary {
+            background-color: #4a4e69;
+            border-color: #4a4e69;
+        }
+
+        .btn-primary:hover {
+            background-color: #5c5f78;
+            border-color: #5c5f78;
+        }
+
+        input.form-control {
+            border-color: #ccc;
+            border-radius: 5px;
+        }
+
+        input.form-control:focus {
+            border-color: #8e8ebd;
+            box-shadow: none;
+        }
+
+    </style>
 </head>
 
 <body ng-app="myApp" ng-controller="myCtrl">
@@ -40,25 +78,49 @@
         </div>
     </div>
 </nav>
+<br><br>
 <div class="container">
     <div class="container">
         <div class="row container" ng-repeat="tempToken in tokens">
             <div class="col-md-8">
-                <div class="card mb-8">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ tempToken.movieName }}</h5>
-                        <label for="noofdays" class="form-label">No. of days for digital release:</label>
-                        <input type="number" ng-model="noofdays" class="form-control" id="noofdays" name="noofdays" value="noofdays">
-                        <p class="card-text">{{ tempToken.productionCompany }}</p>
-                        <p class="card-text">{{ tempToken.ownerAddr }}</p>
-                        <p class="card-text">{{ tempToken.basePrice }}</p>
-                        <button id="buyToken" ng-click="buyToken(noofdays,tempToken.movieName,tempToken.baseDays,tempToken.minTime,tempToken.maxTime,tempToken.basePrice,tempToken.apprPercent,tempToken.deprPercent)">Buy</button>
+                <div class="card mb-3" style="border: 1px solid black;">
+                    <div class="card-body row">
+                        <div class="col-md-6">
+                            <h2 class="card-title">{{ tempToken.movieName }}</h2>
+                            <p class="card-text">Production House: {{ tempToken.productionCompany }}</p><br>
+                            <p class="card-text">BasePrice: {{ tempToken.basePrice }}</p><br>
+                            <p class="card-text">Min.Days: {{ tempToken.minTime }}</p>
+                            <p class="card-text">Max.Days: {{ tempToken.maxTime }}</p>
+                            <p class="card-text">Value Increase %: {{ tempToken.apprPercent }}</p>
+                            <p class="card-text">Value Decrease % {{ tempToken.deprPercent }}</p>
+                            <label for="noofdays" class="form-label">Number of Days to release digitally:</label>
+                            <input type="number" ng-model="noofdays" class="form-control" id="noofdays" name="noofdays" value="noofdays"><br>
+                            <button id="buyToken" class="btn btn-primary" ng-click="buyToken(noofdays,tempToken.movieName,tempToken.baseDays,tempToken.minTime,tempToken.maxTime,tempToken.basePrice,tempToken.apprPercent,tempToken.deprPercent)">Buy</button>
+                        </div>
+                        <div class="col-md-6">
+                            <img src="https://ethereum.org/static/6b935ac0e6194247347855dc3d328e83/6ed5f/eth-diamond-black.webp" class="img-fluid" alt="Ethereum Diamond">
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<footer class="bg-dark text-light py-3">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <p>Copyright © 2023
+                    All Rights Reserved</p>
+            </div>
+            <div class="col-md-6 text-md-right">
+                <a href="#" class="mr-3">Sai Svas Gudimalla</a>
+                <a href="#">Vishnu Kiran Nemani</a>
+            </div>
+        </div>
+    </div>
+</footer>
 
 
 </body>
