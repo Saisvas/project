@@ -17,10 +17,11 @@ App = {
     web3Provider: null,
     contracts: {},
     names: new Array(),
-    url: 'http://127.0.0.1:7545',
+    url: 'https://sepolia.infura.io/v3/29cf43758f8a410da43d77301476813e',
     //chairPerson:null,
     currentAccount:null,
     init: function() {
+        console.log("NON ANGJS");
         return App.initWeb3();
     },
 
@@ -44,14 +45,11 @@ App = {
     initContract: function() {
         $.getJSON('FilmToken.json', function(data) {
             // Get the necessary contract artifact file and instantiate it with truffle-contract
-            var voteArtifact = data;
-            App.contracts.vote = TruffleContract(voteArtifact);
-            // console.log(App.contracts.vote);
+            var filmArtifact = data;
+            App.contracts.film = TruffleContract(filmArtifact);
 
-            // Set the provider for our contract
-            App.contracts.vote.setProvider(App.web3Provider);
+            App.contracts.film.setProvider(App.web3Provider);
 
-            // App.getChairperson();
             return App.bindEvents();
         });
     },
@@ -67,21 +65,15 @@ App = {
             var deprPercent = $('#depreciationPercent').val()
             var minTime = $('#earliestReleaseDate').val()
             var maxTime = $('#finalReleaseDate').val()
-            // const struct = {
-            //     movieName : ad,
-            //     basePrice : parseInt(basePrice),
-            //     baseDays : parseInt(baseDays),
-            //     minTime : parseInt(ad4),
-            //     maxTime : parseInt(ad5),
-            //     apprPercent : parseInt(ad2),
-            //     deprPercent : parseInt(ad3),
-            //     resale : true
-            // }
+
+            const valueInWei = BigInt(basePrice) * BigInt(10**18);
+            console.log(basePrice);
             App.createMovieTokenJs(movieName, basePrice, baseDays,apprPercent, deprPercent,minTime, maxTime);
         });
-        $(document).on('click', '#view', function(){
-            App.viewTokens()
-        });
+        document.getElementById("clickUsers").onclick = App.viewTokens();
+        // document.getElementById("myTokensClick").onclick = angularApp.viewMyTokens();
+
+
 
     },
 
@@ -103,48 +95,142 @@ App = {
         console.log(web3.eth.accounts[0]);
         console.log(prodAddr);
         var filmInstance;
-        App.contracts.vote.deployed().then(function(instance) {
+        App.contracts.film.deployed().then(function(instance) {
             filmInstance = instance;
             return filmInstance.registerProductionHouse(prodName, prodAddr, {from : web3.eth.accounts[0]});
         }).then(function(res){
             console.log(res);
-            alert("registered");
+            toastr.options.timeOut = 4000;
+
+            var events = res.logs;
+            toastr.options.timeOut = 4000;
+            toastr.info(events[0].args.text + " "+events[0].args.prodName);
+
+            toastr.success("Registered!");
         }).catch(function(err){
-            console.log(err.message);
+            console.log(err.message.value);
+            toastr.options.timeOut = 4000;
+            toastr.error(err.message);
+            if(err.message.includes("Duplicate Production House")){
+                toastr.error("Duplicate Production House");
+            }else{
+                toastr.error("Failed");
+            }
         })
     },
 
+    handleBuy : function(days, movieName, finalValue) {
+        console.log("Buy token");
+        console.log(days);
+        console.log(movieName);
+        console.log(finalValue);
+
+        var filmInstance;
+        App.contracts.film.deployed().then(function(instance) {
+
+            filmInstance = instance;
+            return filmInstance.buyMovieToken(days, movieName, {from : web3.eth.accounts[0], value: finalValue.toString()});
+        }).then(function(res){
+            console.log(res);
+            toastr.options.timeOut = 4000;
+
+            var events = res.logs;
+            toastr.options.timeOut = 4000;
+            toastr.info(events[0].args.text +" "+ events[0].args.name);
+            toastr.success("Purchased!");
+        }).catch(function(err){
+            console.log(err.message);
+            toastr.options.timeOut = 4000;
+            if(err.message.includes("Resale is not allowed for this movie")){
+                toastr.error("Resale is not allowed for this movie");
+            }else{
+                toastr.error("Failed");
+            }
+
+        })
+    },
+
+    enableDis : function (tokenId){
+        App.contracts.film.deployed().then(function(instance) {
+            filmInstance = instance;
+            return filmInstance.enableOrDisableResale(tokenId, {from : web3.eth.accounts[0]});
+        }).then(function(res){
+            console.log(res);
+            toastr.options.timeOut = 4000;
+            toastr.success("Toggled!");
+        }).catch(function(err){
+            console.log(err.message);
+            toastr.options.timeOut = 4000;
+            toastr.error("Failed");
+        })
+    },
+
+    incrDecr : function (tokenId, value, flag){
+        if(flag==0){//decrease
+            App.contracts.film.deployed().then(function(instance) {
+                filmInstance = instance;
+                return filmInstance.depreciateTokenValue(tokenId, value, {from : web3.eth.accounts[0]});
+            }).then(function(res){
+                console.log(res);
+                toastr.options.timeOut = 4000;
+                toastr.success("Decreased!");
+            }).catch(function(err){
+                console.log(err.message);
+                toastr.options.timeOut = 4000;
+                toastr.error("Failed");
+            })
+        } else {
+            App.contracts.film.deployed().then(function (instance) {
+                filmInstance = instance;
+                return filmInstance.appreciateTokenValue(tokenId, value, {from: web3.eth.accounts[0]});
+            }).then(function (res) {
+                console.log(res);
+                toastr.options.timeOut = 4000;
+                toastr.success("Increased!");
+            }).catch(function (err) {
+                console.log(err.message);
+                toastr.options.timeOut = 4000;
+                toastr.error("Failed");
+            })
+        }
+
+    },
 
 
     createMovieTokenJs : function(movieName, basePrice, baseDays,apprPercent, deprPercent,minTime, maxTime) {
         console.log("To check");
-        var voteInstance;
-        // if(minTime>maxTime || minTime<0 || maxTime<0){
-        //     alert("Invalid values");
-        //     return;
-        // }
-        // if(apprPercent<0 || deprPercent<0){
-        //     alert("Invalid values");
-        //     return;
-        // }
-        App.contracts.vote.deployed().then(function(instance) {
-            voteInstance = instance;
+        var filmInstance;
+
+        if(apprPercent<0 || deprPercent<0){
+            alert("Invalid values");
+            return;
+        }
+        App.contracts.film.deployed().then(function(instance) {
+            filmInstance = instance;
             console.log(basePrice);
             console.log(apprPercent);
-            return voteInstance.createMovieToken(movieName, basePrice,baseDays,minTime,maxTime,apprPercent,deprPercent );
+            return filmInstance.createMovieToken(movieName, basePrice,baseDays,minTime,maxTime,apprPercent,deprPercent,{from : web3.eth.accounts[0]} );
         }).then(function(res){
             console.log(res);
-            alert("tokenized");
+            var events = res.logs;
+            toastr.options.timeOut = 4000;
+            toastr.info(events[1].args.text +" " + events[1].args.name);
+            toastr.success("Tokenized !");
         }).catch(function(err){
             console.log(err.message);
+            if(err.message.includes("Not a registered production house")){
+                toastr.error("Not a registered production house");
+            }else{
+                toastr.error("Failed");
+            }
         })
     },
 
     getAllProdHouses : function (){
-        App.contracts.vote.deployed().then(function(instance) {
-            voteInstance = instance;
+        App.contracts.film.deployed().then(function(instance) {
+            filmInstance = instance;
             console.log("Entered Fetch");
-            return voteInstance.getAllProdHouses();
+            return filmInstance.getAllProdHouses();
         }).then(function(res){
             console.log(res);
             alert("fetch successful");
@@ -158,7 +244,7 @@ App = {
         var filmInstance;
         console.log("view all the movies");
         var ids = 0;
-        App.contracts.vote.deployed().then(function(instance) {
+        App.contracts.film.deployed().then(function(instance) {
             filmInstance = instance;
             return filmInstance.getAllTokenIds();
         }).then(function(res){
@@ -168,14 +254,14 @@ App = {
             console.log("Token count fetched");
             return ids;
         }).then(function(res){
-            // console.log(res);
+
             console.log(res);
             var promises = [];
             for (var i=0;i<res;i++) {
                 promises.push(filmInstance.tokenIdToTokenMap(i));
             }
             console.log("Token count fetched");
-            alert("all movies displayed");
+            // alert("all movies displayed");
             return Promise.all(promises);
         }).then(function(res){
             console.log("Final block");
@@ -195,23 +281,10 @@ App = {
                     resale: res[i][10]
                 };
                 tokenList.push(tempToken);
-                App.displayTokens();
-
-
-                // console.log(res[i][0]);// MovieName
-                // console.log(res[i][1].c[0]);
-                // console.log(res[i][2].c[0]);
-                // console.log(res[i][3]);
-                // console.log(res[i][4]);
-                // console.log(res[i][5].c[0]);
-                // console.log(res[i][6].c[0]);
-                // console.log(res[i][7].c[0]);
-                // console.log(res[i][8].c[0]);
-                // console.log(res[i][9].c[0]);
-
 
             }
-
+            angular.element(document.querySelector('[ng-controller="myCtrl"]')).scope().copyData(tokenList, web3.eth.accounts[0].toString()) ;
+            // angular.element(document.querySelector('[ng-controller="myCtrl"]')).scope().copyMyTokens(tokenList) ;
         }).catch(function(err){
             console.log(err)
             console.log(err.message);
@@ -220,27 +293,69 @@ App = {
     },
 
 
-    displayTokens: function() {
-        var $tokens = $("#displayList");
-        $tokens.empty();
-        for (var i = 0; i < tokenList.length; i++) {
-            var $newTokenRow = $("<tr>");
-            $newTokenRow.append("<td>" + tokenList[i].tokenId + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].movieName + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].basePrice + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].productionCompany + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].ownerAddr + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].minTime + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].maxTime + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].apprPercent + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].deprPercent + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].baseDays + "</td>");
-            $newTokenRow.append("<td>" + tokenList[i].resale + "</td>");
-            $tokens.append($newTokenRow);
-        }
-    }
+
+
 
 };
+
+var angularApp = angular.module('myApp', []);
+angularApp.controller('myCtrl', function($scope) {
+    console.log("ANGJS");
+
+    $scope.some = "Fetch";
+    $scope.tokens = [];
+    $scope.myTokenList=[];
+    $scope.tokens.push($scope.tempToken);
+    $scope.copyData = function(data,address){
+        $scope.tokens = data;
+        console.log($scope.tokens.length);
+
+        for(var i=0;i<$scope.tokens.length;i++){
+            console.log($scope.tokens[i]);
+            console.log(address);
+            if($scope.tokens[i].ownerAddr === address)
+                $scope.myTokenList.push($scope.tokens[i]);
+        }
+        $scope.$apply();// to reflect this change in the view
+    }
+
+    $scope.increaseDecrease = function(tokenId, value, flag){
+        console.log("inside incr decr");
+        console.log(tokenId);
+        console.log(value);
+        App.incrDecr(tokenId, value, flag);
+    }
+
+    $scope.enableDisable = function(tokenId,resale){
+        App.enableDis(tokenId, resale);
+    }
+
+
+    //alone function
+    $scope.buyToken = function (days, movieName, baseDays, minDays, maxDays, baseVal, apprPercent, deprPercent){
+
+        let finalValue = BigInt(baseVal) * BigInt(10**18);
+        if(days == baseDays){
+            finalValue = BigInt(baseVal) * BigInt(10**18); // do nothing case
+        }else if(days>=minDays && days<baseDays ){//highest cost
+            finalValue += (finalValue/ BigInt(apprPercent));
+        }else if(days>baseDays && days<=maxDays){//second least
+            finalValue -= (finalValue/ BigInt(deprPercent));
+        }else if(days>maxDays){//least most
+            finalValue -= (finalValue/ BigInt(deprPercent));
+            finalValue -= (finalValue/ BigInt(deprPercent));
+
+        }
+        console.log(days);
+        console.log(movieName);
+        console.log(finalValue);
+        App.handleBuy(days, movieName, finalValue);
+    }
+
+
+
+
+});
 
 
 $(function() {

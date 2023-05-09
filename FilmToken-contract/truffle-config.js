@@ -46,6 +46,10 @@
 
 // const HDWalletProvider = require('@truffle/hdwallet-provider');
 
+require('dotenv').config();
+const HDWalletProvider = require('@truffle/hdwallet-provider');
+const { INFURA_API_KEY, MNEMONIC,GOERLI_API_KEY } = process.env;
+
 module.exports = {
   /**
    * Networks define how you connect to your ethereum client and let you set the
@@ -68,7 +72,13 @@ module.exports = {
      host: "127.0.0.1",     // Localhost (default: none)
      port: 7545,            // Standard Ethereum port (default: none)
      network_id: "5777",       // Any network (default: none)
-    }
+    },
+      sepolia: {
+          provider: () => new HDWalletProvider(MNEMONIC, INFURA_API_KEY),
+          network_id: '11155111',
+          // gas: 1000000
+          // gas: 90000000
+      }
     //
     // An additional network, but with some advanced options…
     // advanced: {
