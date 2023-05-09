@@ -121,7 +121,7 @@ contract FilmToken is ERC721 {
         tokenIds.increment();
         allTokens.push(newToken);
 
-        emit newMovie("New event: Token Purchased", movieName);
+        emit newMovie("New event: Token Created", movieName);
 
 
     }
